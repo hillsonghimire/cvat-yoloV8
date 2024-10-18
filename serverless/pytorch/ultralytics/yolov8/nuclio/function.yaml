@@ -1,0 +1,37 @@
+metadata:
+  name: yolo-v8-detection
+  namespace: cvat
+  annotations:
+    name: YOLO v8 Bounding Box Detection
+    type: detector
+    framework: pytorch
+    spec: |
+      [
+        { "id": 0, "name": "wheat", "type": "wheat" }
+      ]
+
+spec:
+  description: YOLO v8 Bounding Box Detection via pytorch
+  runtime: 'python:3.9'
+  handler: main:handler
+  eventTimeout: 30s
+  build:
+    image: cvat.pth.ultralytics.yolov8.detect
+    baseImage: ultralytics/ultralytics:latest-cpu
+    directives:
+      preCopy:
+        - kind: USER
+          value: root
+        - kind: RUN
+          value: pip install torch torchvision torchaudio  # Install PyTorch CPU version
+        - kind: RUN
+          value: apt update && apt install --no-install-recommends -y libglib2.0-0
+        - kind: RUN
+          value: pip install supervision ultralytics scikit-image Pillow
+    volumes:
+      - name: model-volume                # Name of the volume (must be consistent)
+        hostPath:
+          path: /home/hillson/cvat/serverless/pytorch/ultralytics/yolov8/nuclio  # Path on your host system
+    volumeMounts:
+      - name: model-volume                # Name of the volume mount (must match the volume name)
+        mountPath: /opt/nuclio            # Path inside the container where the volume will be mounted
